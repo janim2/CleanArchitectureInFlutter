@@ -7,5 +7,3 @@ import 'package:todo_app/presentation/app.dart';
 void main() {
   runApp(const ProviderScope(child: TodosApp()));
 }
-
-// 52:24

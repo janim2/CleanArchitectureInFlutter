@@ -1,13 +1,44 @@
+// ignore_for_file: depend_on_referenced_packages
+
+import 'package:flutter/material.dart';
 import 'package:todo_app/domain/model/todos.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:todo_app/data/repo/module.dart';
+import 'package:todo_app/domain/usecases/module.dart';
 
-part 'module.g.dart';
+import '../../domain/model/todo.dart';
+import '../../domain/usecases/get_todos.dart';
 
-@riverpod
-Future<Todos> getTodos(GetTodosRef ref) async {
-  final todos = ref.watch(todosProvider);
+// final todosListNotifier = ChangeNotifierProvider<ValueNotifier<Todos>>(
+//     (ref) => ValueNotifier(const Todos(values: [])));
 
-  final items = await todos.loadTodos();
-  return items;
+class TodosStateNotifier extends StateNotifier<Todos> {
+  TodosStateNotifier(this.ref) : super(const Todos(values: [])) {
+    loadTodos();
+  }
+
+  final Ref ref;
+  late final getTodos = ref.read(getTodosProvider);
+
+  Future<void> loadTodos() async {
+    state = await getTodos.execute();
+  }
+
+  Future<void> save(Todo todo) async {
+    await ref.read(saveTodoProvider).execute(todo);
+    await loadTodos();
+  }
+
+  Future<Todo?> get(String id) async {
+    return await ref.read(getTodoProvider).execute(id);
+  }
 }
+
+final todosListState = StateNotifierProvider<TodosStateNotifier, Todos>((ref) {
+  return TodosStateNotifier(ref);
+});
+
+final todosListModel = Provider<TodosStateNotifier>((ref) {
+  return ref.watch(todosListState.notifier);
+});
