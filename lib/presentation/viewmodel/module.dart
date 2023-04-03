@@ -33,6 +33,11 @@ class TodosStateNotifier extends StateNotifier<Todos> {
   Future<Todo?> get(String id) async {
     return await ref.read(getTodoProvider).execute(id);
   }
+
+  Future delete(String id) async {
+    await ref.read(deleteTodoProvider).execute(id);
+    await loadTodos();
+  }
 }
 
 final todosListState = StateNotifierProvider<TodosStateNotifier, Todos>((ref) {

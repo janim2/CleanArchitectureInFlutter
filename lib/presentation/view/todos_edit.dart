@@ -47,6 +47,7 @@ class _TodosEditState extends ConsumerState<TodosEdit> {
           if (mounted) {
             setState(() {
               isCompleted = value.completed;
+              editted = false;
             });
           }
         }
@@ -58,7 +59,41 @@ class _TodosEditState extends ConsumerState<TodosEdit> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Todo'),
+        title: widget.todoId == null
+            ? const Text('Add Todo')
+            : const Text('Edit Todo'),
+        actions: [
+          if (widget.todoId != null)
+            IconButton(
+                onPressed: () async {
+                  final router = GoRouter.of(context);
+                  final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                            title: const Text('Delete Todo?'),
+                            content: const Text(
+                                'Are you sure you want to delete this todo?'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text('No')),
+                              TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  style: TextButton.styleFrom(
+                                      foregroundColor:
+                                          Theme.of(context).colorScheme.error),
+                                  child: const Text('Yes'))
+                            ],
+                          ));
+                  if (confirmed == true) {
+                    model.delete(widget.todoId!);
+                    if (router.canPop()) router.pop();
+                  }
+                },
+                icon: const Icon(Icons.delete))
+        ],
       ),
       body: Scrollbar(
         child: SingleChildScrollView(
@@ -132,7 +167,7 @@ class _TodosEditState extends ConsumerState<TodosEdit> {
               _formKey.currentState!.save();
 
               final todo = Todo(
-                  id: shortid.generate(),
+                  id: widget.todoId ?? shortid.generate(),
                   description: desription.text,
                   title: title.text,
                   completed: isCompleted);
